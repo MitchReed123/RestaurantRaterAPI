@@ -70,41 +70,44 @@ namespace RestaurantRaterAPI.Controllers
             return Ok(restaurants);
         }
         //put
-        //[HttpPut]
-        //public async Task<IHttpActionResult> UpdateItem(int id)
-        //{
-        //    List<Restaurant> restaurants = await _context.Restaurants.ToListAsync();
+        [HttpPut]
+        public async Task<IHttpActionResult> UpdateItem([FromUri]int id, [FromBody]Restaurant restaurant)
+        {
+            if (ModelState.IsValid)
+            {
+                Restaurant restauranttwo = await _context.Restaurants.FindAsync(id);
+                if(restauranttwo != null)
+                {
+                    restauranttwo.Name = restaurant.Name;
+                    restauranttwo.Rating = restaurant.Rating;
 
-        //    foreach (Restaurant item in restaurants)
-        //    {
-        //        if(item.Id == id)
-        //        {
-                   
-        //        }
-        //    }
-        //    return BadRequest("nope");
-        //}
+                    await _context.SaveChangesAsync();
+                    return Ok(restauranttwo);
+                }
+            }
+            return BadRequest(ModelState);
+        }
 
         //delete
         [HttpDelete]
-        public async Task<IHttpActionResult> DeleteItem(Restaurant model, int id)
+        public async Task<IHttpActionResult> DeleteItem([FromUri]int id)
         {
             Restaurant restaurant = await _context.Restaurants.FindAsync(id);
 
-            //if (ModelState.IsValid)
-            //{
-            //    _context.Restaurants.Remove(model);
-
-            //    return Ok("Item Deleted");
-            //}
-
-            if (restaurant.Id == id)
+            if(restaurant == null)
             {
-                _context.Restaurants.Remove(model);
+                return NotFound();
             }
 
+            _context.Restaurants.Remove(restaurant);
 
-            return BadRequest(ModelState);
+            if(await _context.SaveChangesAsync() == 1)
+            {
+                return Ok("Deleted");
+            }
+
+            return InternalServerError();
         }
+
     }
 }
